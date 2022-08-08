@@ -46,6 +46,8 @@ const ChatUI = ({username}) => {
     const [chat, setChat] = React.useState()
     const fetchedRecentChat = React.useRef(false)
     const [refreshChat, setRefreshChat] = React.useState(true)
+    const bottomRef = React.useRef(null);
+    const pagination = React.useRef(5)
 
     React.useEffect( () => {
         if(!fetchedRecentChat.current){
@@ -54,14 +56,13 @@ const ChatUI = ({username}) => {
 
         }
         if(refreshChat){
-            const data = getAllChats()
+            const data = getAllChats(pagination)
             setMessages(data)
             setRefreshChat(false)
-            console.log(data)
         }
+        scroll()
 
     }, [messages, refreshChat])
-
 
     const handleChat = () => {
         const  data = JSON.parse(localStorage.getItem('messages'))
@@ -70,21 +71,34 @@ const ChatUI = ({username}) => {
             "content": chat
         }
         data.push(newMessage)
-        localStorage.setItem('messages', JSON.stringify(data))  
+        setChat('')
+        setMessages(prevState => ([ ...prevState, newMessage]))
+        localStorage.setItem('messages', JSON.stringify(data))
+        
     }
+    const scroll =  () => {
+        bottomRef.current?.scrollIntoView({behavior: 'smooth'})
+    } 
 
     const storageEventHandler = function() {
-        console.log("lkkk")
         setRefreshChat(true)
     }
-
+    
     return (
         <div className='flex justify-center border-[red] border-2 flex-1 max-h-screen'>
             <div className='basis-1/2 xs:basis-full'> 
-                <div className='border-1 max-h-[90%] p-5 overflow-y-auto bg-[#f3f3f3]'>
-                    {messages?.map( message => <MessageUI message={message} /> ) }
+                <div style={{overflow: 'scroll'}} className='border-1 h-[500px] p-5 bg-[#f3f3f3]'>
+                    {messages?.map( message => {
+                        let active = false
+                        if(message.name === username){
+                            active = true
+                        }
+                        return <MessageUI message={message} active= { active } />
+                    } 
+                    ) }
+                    <div ref={bottomRef} />
                 </div>
-                <div className='flex justify-space place-content-center p-[2%] h-[8%] bg-[#8659f6]'>
+                <div  className='flex justify-space place-content-center p-[2%] h-[60px] bg-[#8659f6]'>
                     <input value={chat} onChange={ (e) => setChat(e.target.value) }  className='w-[70%] rounded-full pl-5' placeholder='Start Typing'/>
                     <button onClick={handleChat} className='rounded-full px-5 py-2 bg-white text-[14px]'>Send</button>
                 </div>

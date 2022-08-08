@@ -4,14 +4,7 @@ const App = () => {
     const [userName, setUserName] = React.useState('')
     const [displayChat, setDisplayChat] = React.useState(false)
     const handleLogin = () => {
-        // const availableUsers = JSON.parse(localStorage.getItem('users'))
-        // if(!availableUsers){
-        //     localStorage.setItem('users', JSON.stringify([userName]))
-        // }
-        // if(availableUsers  && !availableUsers.indexOf(userName)){
-        //     const newValue = JSON.stringify(availableUsers.push(userName))
-        //     localStorage.setItem('users', availableUsers)
-        // }
+        
         setDisplayChat(true)
         
     }
@@ -24,9 +17,7 @@ const App = () => {
 }
 
 
-
 const UserLoginUI = ({userName, setUserName, handleLogin}) => {
-    
 
     return (
         <div className='flex justify-center place-items-center  flex-1 min-h-screen'>
@@ -41,28 +32,31 @@ const UserLoginUI = ({userName, setUserName, handleLogin}) => {
 
 
 const ChatUI = ({username}) => {
-    // localStorage.removeItem('messages')
     const [messages, setMessages] = React.useState() 
     const [chat, setChat] = React.useState()
     const fetchedRecentChat = React.useRef(false)
     const [refreshChat, setRefreshChat] = React.useState(true)
     const bottomRef = React.useRef(null);
-    const pagination = React.useRef(5)
+    const disabledScroll = React.useRef(false)
+    const pagination = React.useRef(15)
 
     React.useEffect( () => {
         if(!fetchedRecentChat.current){
             window.addEventListener('storage', storageEventHandler, false);
             fetchedRecentChat.current = true
-
         }
-        if(refreshChat){
-            const data = getAllChats(pagination)
-            setMessages(data)
-            setRefreshChat(false)
+          
+        if(!disabledScroll.current){
+            if(refreshChat){
+                const data = getAllChats(pagination.current)
+                setMessages(data)
+                setRefreshChat(false)
+            }
+            scroll()
         }
-        scroll()
-
+        
     }, [messages, refreshChat])
+
 
     const handleChat = () => {
         const  data = JSON.parse(localStorage.getItem('messages'))
@@ -72,22 +66,37 @@ const ChatUI = ({username}) => {
         }
         data.push(newMessage)
         setChat('')
+        disabledScroll.current = false
         setMessages(prevState => ([ ...prevState, newMessage]))
         localStorage.setItem('messages', JSON.stringify(data))
         
     }
+
     const scroll =  () => {
         bottomRef.current?.scrollIntoView({behavior: 'smooth'})
     } 
 
+    const onScrollPagination = (e) => {
+        const top = e.target.scrollHeight + e.target.scrollTop === e.target.scrollHeight;
+        if(top){
+            pagination.current += 5
+            const data  = getAllChats(pagination.current)
+            if(data.length  >  0){
+                disabledScroll.current =  true
+                setMessages(prevState =>([...data, ...prevState]))
+            }
+        }
+    }
+
     const storageEventHandler = function() {
         setRefreshChat(true)
+        disabledScroll.current = false
     }
     
     return (
         <div className='flex justify-center border-[red] border-2 flex-1 max-h-screen'>
             <div className='basis-1/2 xs:basis-full'> 
-                <div style={{overflow: 'scroll'}} className='border-1 h-[500px] p-5 bg-[#f3f3f3]'>
+                <div style={{overflow: 'scroll'}} onScroll={onScrollPagination} className='border-1 h-[500px] p-5 bg-[#f3f3f3]'>
                     {messages?.map( message => {
                         let active = false
                         if(message.name === username){
@@ -118,13 +127,12 @@ const MessageUI = ({message, active}) => {
     )
 }
 
-
-function getAllChats(){
+function getAllChats(pagination){
     const messages = JSON.parse(localStorage.getItem('messages'))
     if(!messages){
         localStorage.setItem('messages', JSON.stringify([]))
     }
-    return messages
+    return messages.slice(-pagination)
 }
 
 

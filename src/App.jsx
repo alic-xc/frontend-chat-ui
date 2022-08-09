@@ -1,5 +1,6 @@
 import React from 'react'
 import UserImg from './assets/user.png'
+
 const App = () => {
     const [userName, setUserName] = React.useState('')
     const [displayChat, setDisplayChat] = React.useState(false)
@@ -12,7 +13,7 @@ const App = () => {
     )
 }
 
-const UserLoginUI = ({userName, setUserName, handleLogin}) => {
+export const UserLoginUI = ({userName, setUserName, handleLogin}) => {
     // Handle user login UI
     // Pure Component
     return (
@@ -27,7 +28,7 @@ const UserLoginUI = ({userName, setUserName, handleLogin}) => {
 } 
 
 
-const ChatUI = ({username}) => {
+export  const ChatUI = ({username}) => {
     // Handle Chat UI
     const [messages, setMessages] = React.useState() 
     const [chat, setChat] = React.useState()
@@ -121,7 +122,7 @@ const ChatUI = ({username}) => {
     )
 }
 
-const MessageUI = ({message, active}) => {
+export const MessageUI = ({message, active}) => {
     // Handle message UI
     // Pure component
     return (
